@@ -1,0 +1,89 @@
+{% extends 'shop/layouts/main.html' %}
+{% block title %}
+  Registration | ShopKart
+{% endblock title %}
+{% block content %}
+<section class="bg-light py-4 my-5" style="min-height:600px;">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <h4 class="mb-3">Cart Items</h4>
+        <hr style="border-color:#b8bfc2;">
+      </div>
+      <div class="col-12">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover text-center">
+            <thead class="thead-light">
+              <tr>
+                <th scope="col">Image</th>
+                <th scope="col">Product Name</th>
+                <th scope="col">Unit Price</th>
+                <th scope="col">Add to Cart</th>
+                <th scope="col">Remove</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in fav %}
+              <tr>
+                <td>
+                  <img src="{{item.product.product_image.url}}" class="img-fluid rounded" style="height: 75px;" alt="{{item.product.name}}">
+                </td>
+                <td>{{ item.product.name }}</td>
+                <td>₹{{ item.product.selling_price|stringformat:'d' }}</td>
+                <td>
+                  <button class="btn btn-primary btnCart" data-pid="{{ item.product.id }}">
+                    <i class="fa fa-shopping-cart"></i> Add to Cart
+                  </button>
+                </td>
+                <td>
+                  <a href="{% url 'remove_fav' item.id %}" onclick="return confirm('Are you sure you want to remove this item?');" class="btn btn-danger btn-sm">
+                    <i class="fa fa-trash"></i> Remove
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    const cartButtons = document.querySelectorAll(".btnCart");
+
+    cartButtons.forEach((btn) => {
+      btn.addEventListener("click", function () {
+        const productId = btn.getAttribute("data-pid");
+        const postObj = { pid: productId, product_qty: 1 }; // Default quantity set to 1
+
+        fetch("/addtocart", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Accept": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": "{{ csrf_token }}",
+          },
+          body: JSON.stringify(postObj),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data["status"] === "success") {
+              // Redirect to the cart page after adding the item
+              window.location.href = "/cart";
+            } else {
+              alert(data["status"]);
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred. Please try again.");
+          });
+      });
+    });
+  });
+</script>
+{% endblock content %}
